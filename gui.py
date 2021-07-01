@@ -1,22 +1,25 @@
 from sudoku_solver import solve, valid
 import pygame
 import time
+import random
+from random import randint
 pygame.font.init()
 
 class Grid:
-    board = [                           #we can change the board later to randomize a board upon start
-    [0, 9, 0, 7, 5, 1, 0, 2, 3],
-    [2, 1, 8, 6, 0, 3, 7, 5, 4],
-    [0, 0, 0, 4, 0, 2, 0, 0, 0],
-    [1, 0, 0, 0, 0, 0, 0, 9, 2],
-    [0, 0, 0, 5, 0, 0, 3, 8, 0],
-    [3, 0, 0, 8, 2, 0, 5, 0, 6],
-    [0, 0, 0, 0, 7, 0, 0, 4, 8],
-    [0, 4, 9, 0, 0, 0, 0, 7, 0],
-    [0, 2, 0, 0, 0, 5, 6, 3, 1],
+    board = [                          
+    [0, 0, 0, 0, 0, 0, 0, 0, 0],  #place holder board
+    [0, 0, 0, 0, 0, 0, 0, 0, 0],  # we set the board based on difficulty with generate board function
+    [0, 0, 0, 0, 0, 0, 0, 0, 0],
+    [0, 0, 0, 0, 0, 0, 0, 0, 0],
+    [0, 0, 0, 0, 0, 0, 0, 0, 0],
+    [0, 0, 0, 0, 0, 0, 0, 0, 0],
+    [0, 0, 0, 0, 0, 0, 0, 0, 0],
+    [0, 0, 0, 0, 0, 0, 0, 0, 0],
+    [0, 0, 0, 0, 0, 0, 0, 0, 0],
 ]
 
-    def __init__(self, row, col, width, height):
+
+    def __init__(self, row, col, width, height, difficulty):
         self.row = row
         self.col = col
         self.cubes = [[Cube(self.board[i][j], i, j, width, height) for j in range(col)] for i in range(row)]
@@ -24,6 +27,25 @@ class Grid:
         self.height = height
         self.model = None
         self.selected = None
+        self.difficulty = difficulty
+
+    def generate_board(self):
+        #generate a valid solution grid
+        #1. generate the first 3x3 subsquare (currently no restraints)
+        rand_ints = random.sample(range(1, 10), 9)
+        for i in range(3):
+            for j in range(3):
+                self.cubes[i][j] = rand_ints[len(rand_ints) - 1]
+                rand_ints.pop()
+        #2 use the solve function to finish the rest of the board using backtracking
+        solve(self.cubes)
+        #erase some numbers based on difficulty
+        for i in range(40):
+            x = randint(0, 8)
+            y = randint(0, 8)
+            self.cubes[x][y] = 0
+
+        self.board = self.cubes
 
     def update_model(self):
         self.model = [[self.cubes[i][j].value for j in range(self.col)] for i in range(self.row)]
@@ -150,7 +172,8 @@ def format_time(secs):
 def main():
     win = pygame.display.set_mode((540,600))
     pygame.display.set_caption("Sudoku")
-    board = Grid(9, 9, 540, 540)
+    board = Grid(9, 9, 540, 540, "easy")
+    board.generate_board()
     key = None
     run = True
     start = time.time()
