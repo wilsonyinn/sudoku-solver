@@ -35,17 +35,15 @@ class Grid:
         rand_ints = random.sample(range(1, 10), 9)
         for i in range(3):
             for j in range(3):
-                self.cubes[i][j] = rand_ints[len(rand_ints) - 1]
+                self.board[i][j] = rand_ints[len(rand_ints) - 1]
                 rand_ints.pop()
         #2 use the solve function to finish the rest of the board using backtracking
-        solve(self.cubes)
+        solve(self.board)
         #erase some numbers based on difficulty
         for i in range(40):
             x = randint(0, 8)
             y = randint(0, 8)
-            self.cubes[x][y] = 0
-
-        self.board = self.cubes
+            self.board[x][y] = 0
 
     def update_model(self):
         self.model = [[self.cubes[i][j].value for j in range(self.col)] for i in range(self.row)]
@@ -174,6 +172,7 @@ def main():
     pygame.display.set_caption("Sudoku")
     board = Grid(9, 9, 540, 540, "easy")
     board.generate_board()
+    board.update_model()
     key = None
     run = True
     start = time.time()
