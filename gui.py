@@ -186,7 +186,7 @@ def format_time(secs):
     mat = " " + str(minute) + ":" + str(sec)
     return mat
 
-def main_menu(win):
+"""def main_menu(win):
     win.fill((255, 255, 255))
     # Draw time
     fnt = pygame.font.SysFont("comicsans", 40)
@@ -203,12 +203,12 @@ def main_menu(win):
     win.blit(mode_text1, (20, 560))
     win.blit(mode_text1, (20, 560))
     # Draw grid and board
-    #board.draw(win)
+    #board.draw(win)"""
 
 def main():
     win = pygame.display.set_mode((540, 600))
     pygame.display.set_caption("Sudoku")
-    main_menu(win)
+    #main_menu(win)
     difficulty = "easy"
     board = Grid(9, 9, 540, 540, difficulty)
     board.generate_board()
