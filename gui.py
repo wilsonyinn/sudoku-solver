@@ -1,13 +1,13 @@
-from sudoku_solver import solve, valid
+from sudoku_solver import solve, valid, find_empty
 import pygame
 import time
 import random
 from random import randint
 pygame.font.init()
 
-difficulty = "none"
 SCREEN_WIDTH = 540
 SCREEN_HEIGHT = 600
+BLACK = (0, 0, 0)
 GREY = (192, 192, 192)
 WHITE = (255, 255, 255)
 WHITE_GREY = (220, 220, 220)
@@ -67,6 +67,30 @@ class Grid:
     def update_model(self):
         self.model = [[self.cubes[i][j].value for j in range(
             self.col)] for i in range(self.row)]
+
+    """def auto_solve(self):
+        find = find_empty(self.board)
+        if not find:  # base case happens when there are no more empty spots
+            return True  # which means that a solution has been found
+        else:
+            row, col = find
+
+        for i in range(1, 10):  # testing the numbers from 1-9 for each empty spot
+            if valid(self.board, i, (row, col)):     #
+                self.board[row][col] = i
+                self.cubes[row][col].set(i)
+                self.update_model()
+                pygame.time.wait(100)
+                if self.auto_solve():  # recursively call this solve function
+                    return True  # goes to next empty spot, tries for 1-9
+                self.board[row][col] = 0
+                self.cubes[row][col].set(0)
+
+                # continues until a dead end and returns back (backtracking, the rescursive functions unfolds)
+                self.update_model()
+
+        return False
+"""
 
     def place(self, val):
         row, col = self.selected
@@ -172,12 +196,33 @@ class Cube:
         self.temp = val
 
 
+def auto_solve(win, board, time, strikes):
+    find = find_empty(board.board)
+    if not find:  # base case happens when there are no more empty spots
+        return True  # which means that a solution has been found
+    else:
+        row, col = find
+
+    for i in range(1, 10):  
+        if valid(board.board, i, (row, col)):     
+            board.board[row][col] = i
+            board.cubes[row][col].set(i)
+            board.update_model()
+            if auto_solve(win, board, time, strikes): 
+                return True  
+            board.board[row][col] = 0
+            board.cubes[row][col].set(0)
+            board.update_model()
+
+    return False
+
+
 def redraw_window(win, board, time, strikes):
     win.fill((255, 255, 255))
     # Draw time
     fnt = pygame.font.SysFont("comicsans", 40)
     text = fnt.render("Time: " + format_time(time), 1, (0, 0, 0))
-    win.blit(text, (540 - 160, 560))
+    win.blit(text, (370, 560))
     # Draw Strikes
     text = fnt.render("X " * strikes, 1, (255, 0, 0))
     win.blit(text, (20, 560))
@@ -188,9 +233,15 @@ def redraw_window(win, board, time, strikes):
 def format_time(secs):
     sec = secs % 60
     minute = secs//60
-    hour = minute//60
 
-    mat = " " + str(minute) + ":" + str(sec)
+    if sec < 10 and minute < 10:
+        mat = " 0" + str(minute) + ":0" + str(sec)
+    elif minute < 10 and sec >= 10:
+        mat = " 0" + str(minute) + ":" + str(sec)
+    elif minute >= 10 and sec < 10:
+        mat = " " + str(minute) + ":0" + str(sec)
+    else:
+        mat = " " + str(minute) + ":" + str(sec)
     return mat
 
 
@@ -199,44 +250,53 @@ def button(win):
     fnt = pygame.font.SysFont("comicsans", 40)
     mouse = pygame.mouse.get_pos()
     click = pygame.mouse.get_pressed()
-    # print(mouse)
-    print(click)
+
     if SCREEN_WIDTH/2 - 75 < mouse[0] < SCREEN_WIDTH/2 - 75 + 150 and 210 < mouse[1] < 270:
-        pygame.draw.rect(win, WHITE_GREY, pygame.Rect(
-            SCREEN_WIDTH/2 - 75, 210, 150, 60))
+        pygame.draw.rect(win, WHITE_GREY, (SCREEN_WIDTH/2 - 75, 210, 150, 60))
+        pygame.draw.lines(win, BLACK, True, [
+                          (195, 210), (345, 210), (345, 270), (195, 270)], 3)
         if click[0] == 1:
             difficulty = "easy"
             print(difficulty)
-
     else:
         pygame.draw.rect(win, WHITE, pygame.Rect(
             SCREEN_WIDTH/2 - 75, 210, 150, 60))
+        pygame.draw.lines(win, WHITE, True, [
+                          (195, 210), (345, 210), (345, 270), (195, 270)], 3)
     if SCREEN_WIDTH/2 - 75 < mouse[0] < SCREEN_WIDTH/2 - 75 + 150 and 310 < mouse[1] < 370:
         pygame.draw.rect(win, WHITE_GREY, pygame.Rect(
             SCREEN_WIDTH/2 - 75, 310, 150, 60))
+        pygame.draw.lines(win, BLACK, True, [
+                          (195, 310), (345, 310), (345, 370), (195, 370)], 3)
         if click[0] == 1:
             difficulty = "medium"
     else:
         pygame.draw.rect(win, WHITE, pygame.Rect(
             SCREEN_WIDTH/2 - 75, 310, 150, 60))
+        pygame.draw.lines(win, WHITE, True, [
+                          (195, 310), (345, 310), (345, 370), (195, 370)], 3)
     if SCREEN_WIDTH/2 - 75 < mouse[0] < SCREEN_WIDTH/2 - 75 + 150 and 410 < mouse[1] < 470:
         pygame.draw.rect(win, WHITE_GREY, pygame.Rect(
             SCREEN_WIDTH/2 - 75, 410, 150, 60))
+        pygame.draw.lines(win, BLACK, True, [
+                          (195, 410), (345, 410), (345, 470), (195, 470)], 3)
         if click[0] == 1:
             difficulty = "hard"
     else:
         pygame.draw.rect(win, WHITE, pygame.Rect(
             SCREEN_WIDTH/2 - 75, 410, 150, 60))
+        pygame.draw.lines(win, WHITE, True, [
+                          (195, 410), (345, 410), (345, 470), (195, 470)], 3)
 
-    mode_text1 = fnt.render("EASY", 1, (0, 0, 0))
-    mode_text2 = fnt.render("MEDIUM", 1, (0, 0, 0))
-    mode_text3 = fnt.render("HARD", 1, (0, 0, 0))
+    mode_text1 = fnt.render("Easy", 1, (0, 0, 0))
+    mode_text2 = fnt.render("Medium", 1, (0, 0, 0))
+    mode_text3 = fnt.render("Hard", 1, (0, 0, 0))
     text_rect = mode_text1.get_rect(center=(SCREEN_WIDTH/2, 240))
     win.blit(mode_text1, text_rect)
     text_rect = mode_text2.get_rect(center=(SCREEN_WIDTH/2, 340))
     win.blit(mode_text2, text_rect)
     text_rect = mode_text3.get_rect(center=(SCREEN_WIDTH/2, 440))
-    win.blit(mode_text3, text_rect) 
+    win.blit(mode_text3, text_rect)
 
     if difficulty == 'easy' or difficulty == 'medium' or difficulty == 'hard':
         return difficulty
@@ -247,7 +307,7 @@ def button(win):
 def main_menu(win):
 
     # Draw time
-    fnt = pygame.font.SysFont("comicsans", 60)
+    fnt = pygame.font.SysFont("comicsans", 50)
     title_text = fnt.render("SUDOKU", 1, (0, 0, 0))
     text_rect = title_text.get_rect(center=(SCREEN_WIDTH/2, 100))
     win.blit(title_text, text_rect)
@@ -274,12 +334,11 @@ def main():
             if event.type == pygame.QUIT:
                 pygame.quit()
                 quit()
-        if mode_selected == "easy" or mode_selected == "medium" or mode_selected == "hard":
+        if mode_selected == 'easy' or mode_selected == 'medium' or mode_selected == 'hard':
             run = False
-            pygame.quit()
-        
+
         if run == True:
-            main_menu(win)
+            mode_selected = main_menu(win)
 
     difficulty = mode_selected
     board = Grid(9, 9, 540, 540, difficulty)
@@ -297,6 +356,9 @@ def main():
             if event.type == pygame.QUIT:
                 run = False
             if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_SPACE:
+                    auto_solve(win, board, play_time, strikes)
+                    print("auto solving")
                 if event.key == pygame.K_1:
                     key = 1
                 if event.key == pygame.K_2:
@@ -344,6 +406,7 @@ def main():
 
         redraw_window(win, board, play_time, strikes)
         pygame.display.update()
+        print("refresh")
 
 
 main()
