@@ -236,12 +236,12 @@ def button(win):
     text_rect = mode_text2.get_rect(center=(SCREEN_WIDTH/2, 340))
     win.blit(mode_text2, text_rect)
     text_rect = mode_text3.get_rect(center=(SCREEN_WIDTH/2, 440))
-    win.blit(mode_text3, text_rect)
+    win.blit(mode_text3, text_rect) 
 
-    if difficulty == "easy" or difficulty == "medium" or difficulty == "hard":
-        return True
+    if difficulty == 'easy' or difficulty == 'medium' or difficulty == 'hard':
+        return difficulty
     else:
-        return False
+        return ""
 
 
 def main_menu(win):
@@ -253,11 +253,12 @@ def main_menu(win):
     win.blit(title_text, text_rect)
 
     button_clicked = button(win)
+    print(button_clicked)
     pygame.display.flip()
-    if button_clicked == True:
-        return True
+    if button_clicked == 'easy' or button_clicked == 'medium' or button_clicked == 'hard':
+        return button_clicked
 
-    return False
+    return ""
     # Draw grid and board
 
 
@@ -273,11 +274,14 @@ def main():
             if event.type == pygame.QUIT:
                 pygame.quit()
                 quit()
-            if mode_selected == True:
-                run = False
+        if mode_selected == "easy" or mode_selected == "medium" or mode_selected == "hard":
+            run = False
+            pygame.quit()
+        
         if run == True:
             main_menu(win)
 
+    difficulty = mode_selected
     board = Grid(9, 9, 540, 540, difficulty)
     board.generate_board()
     board.update_model()
