@@ -196,20 +196,20 @@ class Cube:
         self.temp = val
 
 
-def auto_solve(win, board, time, strikes):
+def auto_solve(win, board):
     find = find_empty(board.board)
     if not find:  # base case happens when there are no more empty spots
         return True  # which means that a solution has been found
     else:
         row, col = find
 
-    for i in range(1, 10):  
-        if valid(board.board, i, (row, col)):     
+    for i in range(1, 10):
+        if valid(board.board, i, (row, col)):
             board.board[row][col] = i
             board.cubes[row][col].set(i)
             board.update_model()
-            if auto_solve(win, board, time, strikes): 
-                return True  
+            if auto_solve(win, board):
+                return True
             board.board[row][col] = 0
             board.cubes[row][col].set(0)
             board.update_model()
@@ -243,6 +243,20 @@ def format_time(secs):
     else:
         mat = " " + str(minute) + ":" + str(sec)
     return mat
+
+
+def hover(x, y, width, height):
+    mouse = pygame.mouse.get_pos()
+    if x < mouse[0] < x + width and y < mouse[1] < y + height:
+        return True
+    return False
+
+
+def click(x, y, width, height):
+    click = pygame.mouse.get_pressed()
+    if x < click[0] < x + width and y < click[1] < y + height:
+        return True
+    return False
 
 
 def button(win):
@@ -319,7 +333,65 @@ def main_menu(win):
         return button_clicked
 
     return ""
-    # Draw grid and board
+
+
+def post_game_menu(win, outcome, play_time, strikes):
+    pygame.draw.rect(win, GREY, (70, 80, 400, 440))
+    fnt = pygame.font.SysFont("comicsans", 70)
+    outcome_text = fnt.render("You " + outcome + "!", 1, BLACK)
+    text_rect = outcome_text.get_rect(center=(SCREEN_WIDTH/2, 165))
+    win.blit(outcome_text, text_rect)
+
+    fnt = pygame.font.SysFont("comicsans", 30)
+    time_text = fnt.render("Time: " + str(play_time), 1, BLACK)
+    text_rect = time_text.get_rect(center=(SCREEN_WIDTH/2, 260))
+    win.blit(time_text, text_rect)
+
+    strike_text = fnt.render("Mistakes: " + str(strikes), 1, BLACK)
+    text_rect = strike_text.get_rect(center=(SCREEN_WIDTH/2, 300))
+    win.blit(strike_text, text_rect)
+
+    if hover(100, 380, 150, 50):
+        pygame.draw.rect(win, WHITE_GREY, (100, 380, 150, 50))
+        pygame.draw.lines(win, BLACK, True, [
+                          (100, 380), (250, 380), (250, 430), (100, 430)], 3)
+        if click(100, 380, 150, 50):
+            main_menu(win)
+    else:
+        pygame.draw.rect(win, WHITE, (100, 380, 150, 50))
+        pygame.draw.lines(win, WHITE, True, [
+                          (100, 380), (250, 380), (250, 430), (100, 430)], 3)
+
+    if hover(290, 380, 150, 50):
+        pygame.draw.rect(win, WHITE_GREY, (290, 380, 150, 50))
+        pygame.draw.lines(win, BLACK, True, [
+                          (290, 380), (440, 380), (440, 430), (290, 430)], 3)
+        if click(290, 380, 150, 50):
+            pygame.quit()
+            exit()
+    else:
+        pygame.draw.rect(win, WHITE, (290, 380, 150, 50))
+        pygame.draw.lines(win, WHITE, True, [
+                          (290, 380), (440, 380), (440, 430), (290, 430)], 3)
+
+    play_again_text = fnt.render("Play Again", 1, BLACK)
+    text_rect = play_again_text.get_rect(center=(175, 405))
+    win.blit(play_again_text, text_rect)
+
+    quit_text = fnt.render("Quit", 1, BLACK)
+    text_rect = quit_text.get_rect(center=(365, 405))
+    win.blit(quit_text, text_rect)
+
+    pygame.draw.rect(win, WHITE_GREY, (75, 500, 95, 15))
+    fnt = pygame.font.SysFont("comicsans", 20)
+    if hover(75, 500, 95, 15):
+        view_board_text = fnt.render("<- View Board", 1, BLUE)
+        win.blit(view_board_text, (79, 500))
+    else:
+        view_board_text = fnt.render("<- View Board", 1, BLACK)
+        win.blit(view_board_text, (79, 500))
+
+    pygame.display.flip()
 
 
 def main():
@@ -357,7 +429,7 @@ def main():
                 run = False
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_SPACE:
-                    auto_solve(win, board, play_time, strikes)
+                    auto_solve(win, board)
                     print("auto solving")
                 if event.key == pygame.K_1:
                     key = 1
@@ -391,8 +463,7 @@ def main():
                         key = None
 
                         if board.is_finished():
-                            print("Game over")
-                            run = False
+                            post_game_menu(win, "Win", play_time, strikes)
 
             if event.type == pygame.MOUSEBUTTONDOWN:
                 pos = pygame.mouse.get_pos()
@@ -404,9 +475,14 @@ def main():
         if board.selected and key != None:
             board.sketch(key)
 
-        redraw_window(win, board, play_time, strikes)
-        pygame.display.update()
-        print("refresh")
+        if board.is_finished():
+            #run = False stop the timer somehow
+            post_game_menu(win, "Win", play_time, strikes)
+
+        if not board.is_finished():
+            redraw_window(win, board, play_time, strikes)
+            pygame.display.update()
+            print("refresh")
 
 
 main()
