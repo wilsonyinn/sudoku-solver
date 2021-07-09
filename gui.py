@@ -7,6 +7,7 @@ pygame.font.init()
 
 SCREEN_WIDTH = 540
 SCREEN_HEIGHT = 600
+BLUE = (0, 0, 255)
 BLACK = (0, 0, 0)
 GREY = (192, 192, 192)
 WHITE = (255, 255, 255)
@@ -252,13 +253,6 @@ def hover(x, y, width, height):
     return False
 
 
-def click(x, y, width, height):
-    click = pygame.mouse.get_pressed()
-    if x < click[0] < x + width and y < click[1] < y + height:
-        return True
-    return False
-
-
 def button(win):
     difficulty = ""
     fnt = pygame.font.SysFont("comicsans", 40)
@@ -335,7 +329,8 @@ def main_menu(win):
     return ""
 
 
-def post_game_menu(win, outcome, play_time, strikes):
+def postgamemenu(win, outcome, play_time, strikes):
+    click = pygame.mouse.get_pressed()
     pygame.draw.rect(win, GREY, (70, 80, 400, 440))
     fnt = pygame.font.SysFont("comicsans", 70)
     outcome_text = fnt.render("You " + outcome + "!", 1, BLACK)
@@ -353,26 +348,22 @@ def post_game_menu(win, outcome, play_time, strikes):
 
     if hover(100, 380, 150, 50):
         pygame.draw.rect(win, WHITE_GREY, (100, 380, 150, 50))
-        pygame.draw.lines(win, BLACK, True, [
-                          (100, 380), (250, 380), (250, 430), (100, 430)], 3)
-        if click(100, 380, 150, 50):
-            main_menu(win)
+        pygame.draw.lines(win, BLACK, True, [(100, 380), (250, 380), (250, 430), (100, 430)], 3)
+        if click[0] == 1:
+            print("main menu button clicked")
     else:
         pygame.draw.rect(win, WHITE, (100, 380, 150, 50))
-        pygame.draw.lines(win, WHITE, True, [
-                          (100, 380), (250, 380), (250, 430), (100, 430)], 3)
+        pygame.draw.lines(win, WHITE, True, [(100, 380), (250, 380), (250, 430), (100, 430)], 3)
 
     if hover(290, 380, 150, 50):
         pygame.draw.rect(win, WHITE_GREY, (290, 380, 150, 50))
-        pygame.draw.lines(win, BLACK, True, [
-                          (290, 380), (440, 380), (440, 430), (290, 430)], 3)
-        if click(290, 380, 150, 50):
+        pygame.draw.lines(win, BLACK, True, [(290, 380), (440, 380), (440, 430), (290, 430)], 3)
+        if click[0] == 1:
             pygame.quit()
             exit()
     else:
         pygame.draw.rect(win, WHITE, (290, 380, 150, 50))
-        pygame.draw.lines(win, WHITE, True, [
-                          (290, 380), (440, 380), (440, 430), (290, 430)], 3)
+        pygame.draw.lines(win, WHITE, True, [(290, 380), (440, 380), (440, 430), (290, 430)], 3)
 
     play_again_text = fnt.render("Play Again", 1, BLACK)
     text_rect = play_again_text.get_rect(center=(175, 405))
@@ -393,7 +384,6 @@ def post_game_menu(win, outcome, play_time, strikes):
 
     pygame.display.flip()
 
-
 def main():
     win = pygame.display.set_mode((540, 600))
     pygame.display.set_caption("Sudoku")
@@ -411,6 +401,7 @@ def main():
 
         if run == True:
             mode_selected = main_menu(win)
+
 
     difficulty = mode_selected
     board = Grid(9, 9, 540, 540, difficulty)
@@ -463,7 +454,7 @@ def main():
                         key = None
 
                         if board.is_finished():
-                            post_game_menu(win, "Win", play_time, strikes)
+                            postgamemenu(win, "Win", play_time, strikes)
 
             if event.type == pygame.MOUSEBUTTONDOWN:
                 pos = pygame.mouse.get_pos()
@@ -476,8 +467,18 @@ def main():
             board.sketch(key)
 
         if board.is_finished():
-            #run = False stop the timer somehow
-            post_game_menu(win, "Win", play_time, strikes)
+            post_game_run = True
+            result = "win"
+            while post_game_run:
+                for event in pygame.event.get():
+                    if event.type == pygame.MOUSEBUTTONDOWN:
+                        pos = pygame.mouse.get_pos()
+                        if 100 < pos[0] < 250 and 380 < pos[1] < 430:
+                            post_game_menu = False
+                        if 290 < pos[0] < 440 and 380 < pos[1] < 430:
+                            pygame.quit()
+                            exit()
+                postgamemenu(win, "Win", 160, 2)
 
         if not board.is_finished():
             redraw_window(win, board, play_time, strikes)

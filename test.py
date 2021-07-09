@@ -10,12 +10,6 @@ WHITE = (255, 255, 255)
 WHITE_GREY = (220, 220, 220)
 BLUE = (0, 0, 255)
 
-def click(x, y, width, height):
-    click = pygame.mouse.get_pressed()
-    if x < click[0] < x + width and y < click[1] < y + height:
-        return True
-    return False
-
 def hover(x, y, width, height):
     mouse = pygame.mouse.get_pos()
     if x < mouse[0] < x + width and y < mouse[1] < y + height:
@@ -24,6 +18,7 @@ def hover(x, y, width, height):
 
 
 def post_game_menu(win, outcome, play_time, strikes):
+    click = pygame.mouse.get_pressed()
     pygame.draw.rect(win, GREY, (70, 80, 400, 440))
     fnt = pygame.font.SysFont("comicsans", 70)
     outcome_text = fnt.render("You " + outcome + "!", 1, BLACK)
@@ -42,8 +37,8 @@ def post_game_menu(win, outcome, play_time, strikes):
     if hover(100, 380, 150, 50):
         pygame.draw.rect(win, WHITE_GREY, (100, 380, 150, 50))
         pygame.draw.lines(win, BLACK, True, [(100, 380), (250, 380), (250, 430), (100, 430)], 3)
-        if click(100, 380, 150, 50):
-            main_menu(win)
+        if click[0] == 1:
+            print("main menu button clicked")
     else:
         pygame.draw.rect(win, WHITE, (100, 380, 150, 50))
         pygame.draw.lines(win, WHITE, True, [(100, 380), (250, 380), (250, 430), (100, 430)], 3)
@@ -51,7 +46,7 @@ def post_game_menu(win, outcome, play_time, strikes):
     if hover(290, 380, 150, 50):
         pygame.draw.rect(win, WHITE_GREY, (290, 380, 150, 50))
         pygame.draw.lines(win, BLACK, True, [(290, 380), (440, 380), (440, 430), (290, 430)], 3)
-        if click(290, 380, 150, 50):
+        if click[0] == 1:
             pygame.quit()
             exit()
     else:
