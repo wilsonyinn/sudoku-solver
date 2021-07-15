@@ -1,4 +1,4 @@
-from sudoku_solver import solve, valid, find_empty
+from sudoku_solver import solve, valid, find_empty, print_board
 import pygame
 import time
 import random
@@ -28,7 +28,7 @@ class Grid:
         [0, 0, 0, 0, 0, 0, 0, 0, 0],
     ]
 
-    def __init__(self, row, col, width, height, difficulty):
+    def __init__(self, row, col, width, height, difficulty, win):
         self.row = row
         self.col = col
         self.cubes = [[Cube(self.board[i][j], i, j, width, height)
@@ -38,6 +38,19 @@ class Grid:
         self.model = None
         self.selected = None
         self.difficulty = difficulty
+        self.win = win
+        self.board = [
+        [0, 0, 0, 0, 0, 0, 0, 0, 0],  # place holder board
+        # we set the board based on difficulty with generate board function
+        [0, 0, 0, 0, 0, 0, 0, 0, 0],
+        [0, 0, 0, 0, 0, 0, 0, 0, 0],
+        [0, 0, 0, 0, 0, 0, 0, 0, 0],
+        [0, 0, 0, 0, 0, 0, 0, 0, 0],
+        [0, 0, 0, 0, 0, 0, 0, 0, 0],
+        [0, 0, 0, 0, 0, 0, 0, 0, 0],
+        [0, 0, 0, 0, 0, 0, 0, 0, 0],
+        [0, 0, 0, 0, 0, 0, 0, 0, 0],
+    ]
 
     def generate_board(self):
         # generate a valid solution grid
@@ -68,30 +81,6 @@ class Grid:
     def update_model(self):
         self.model = [[self.cubes[i][j].value for j in range(
             self.col)] for i in range(self.row)]
-
-    """def auto_solve(self):
-        find = find_empty(self.board)
-        if not find:  # base case happens when there are no more empty spots
-            return True  # which means that a solution has been found
-        else:
-            row, col = find
-
-        for i in range(1, 10):  # testing the numbers from 1-9 for each empty spot
-            if valid(self.board, i, (row, col)):     #
-                self.board[row][col] = i
-                self.cubes[row][col].set(i)
-                self.update_model()
-                pygame.time.wait(100)
-                if self.auto_solve():  # recursively call this solve function
-                    return True  # goes to next empty spot, tries for 1-9
-                self.board[row][col] = 0
-                self.cubes[row][col].set(0)
-
-                # continues until a dead end and returns back (backtracking, the rescursive functions unfolds)
-                self.update_model()
-
-        return False
-"""
 
     def place(self, val):
         row, col = self.selected
@@ -158,6 +147,35 @@ class Grid:
                     return False
         return True
 
+    def solve_gui(self):
+        self.update_model()
+        find = find_empty(self.model)
+        if not find:
+            return True
+        else:
+            row, col = find
+
+        for i in range(1, 10):
+            if valid(self.model, i, (row, col)):
+                self.model[row][col] = i
+                self.cubes[row][col].set(i)
+                self.cubes[row][col].draw_change(self.win, True)
+                self.update_model()
+                pygame.display.update()
+                pygame.time.delay(100)
+
+                if self.solve_gui():
+                    return True
+
+                self.model[row][col] = 0
+                self.cubes[row][col].set(0)
+                self.update_model()
+                self.cubes[row][col].draw_change(self.win, False)
+                pygame.display.update()
+                pygame.time.delay(100)
+
+        return False
+
 
 class Cube:
     row = 9
@@ -196,6 +214,29 @@ class Cube:
     def set_temp(self, val):
         self.temp = val
 
+    def draw_change(self, win, g=True):
+        fnt = pygame.font.SysFont("comicsans", 40)
+
+        gap = self.width / 9
+        x = self.col * gap
+        y = self.row * gap
+
+        pygame.draw.rect(win, (255, 255, 255), (x, y, gap, gap), 0)
+
+        text = fnt.render(str(self.value), 1, (0, 0, 0))
+        win.blit(text, (x + (gap / 2 - text.get_width() / 2),
+                        y + (gap / 2 - text.get_height() / 2)))
+        if g:
+            pygame.draw.rect(win, (0, 255, 0), (x, y, gap, gap), 3)
+        else:
+            pygame.draw.rect(win, (255, 0, 0), (x, y, gap, gap), 3)
+
+    def set(self, val):
+        self.value = val
+
+    def set_temp(self, val):
+        self.temp = val
+
 
 def auto_solve(win, board):
     find = find_empty(board.board)
@@ -209,11 +250,13 @@ def auto_solve(win, board):
             board.board[row][col] = i
             board.cubes[row][col].set(i)
             board.update_model()
+            pygame.display.flip()
             if auto_solve(win, board):
                 return True
             board.board[row][col] = 0
             board.cubes[row][col].set(0)
             board.update_model()
+            pygame.display.flip()
 
     return False
 
@@ -313,8 +356,7 @@ def button(win):
 
 
 def main_menu(win):
-
-    # Draw time
+    win.fill(GREY)
     fnt = pygame.font.SysFont("comicsans", 50)
     title_text = fnt.render("SUDOKU", 1, (0, 0, 0))
     text_rect = title_text.get_rect(center=(SCREEN_WIDTH/2, 100))
@@ -348,22 +390,26 @@ def postgamemenu(win, outcome, play_time, strikes):
 
     if hover(100, 380, 150, 50):
         pygame.draw.rect(win, WHITE_GREY, (100, 380, 150, 50))
-        pygame.draw.lines(win, BLACK, True, [(100, 380), (250, 380), (250, 430), (100, 430)], 3)
+        pygame.draw.lines(win, BLACK, True, [
+                          (100, 380), (250, 380), (250, 430), (100, 430)], 3)
         if click[0] == 1:
             print("main menu button clicked")
     else:
         pygame.draw.rect(win, WHITE, (100, 380, 150, 50))
-        pygame.draw.lines(win, WHITE, True, [(100, 380), (250, 380), (250, 430), (100, 430)], 3)
+        pygame.draw.lines(win, WHITE, True, [
+                          (100, 380), (250, 380), (250, 430), (100, 430)], 3)
 
     if hover(290, 380, 150, 50):
         pygame.draw.rect(win, WHITE_GREY, (290, 380, 150, 50))
-        pygame.draw.lines(win, BLACK, True, [(290, 380), (440, 380), (440, 430), (290, 430)], 3)
+        pygame.draw.lines(win, BLACK, True, [
+                          (290, 380), (440, 380), (440, 430), (290, 430)], 3)
         if click[0] == 1:
             pygame.quit()
             exit()
     else:
         pygame.draw.rect(win, WHITE, (290, 380, 150, 50))
-        pygame.draw.lines(win, WHITE, True, [(290, 380), (440, 380), (440, 430), (290, 430)], 3)
+        pygame.draw.lines(win, WHITE, True, [
+                          (290, 380), (440, 380), (440, 430), (290, 430)], 3)
 
     play_again_text = fnt.render("Play Again", 1, BLACK)
     text_rect = play_again_text.get_rect(center=(175, 405))
@@ -372,22 +418,12 @@ def postgamemenu(win, outcome, play_time, strikes):
     quit_text = fnt.render("Quit", 1, BLACK)
     text_rect = quit_text.get_rect(center=(365, 405))
     win.blit(quit_text, text_rect)
-
-    pygame.draw.rect(win, WHITE_GREY, (75, 500, 95, 15))
-    fnt = pygame.font.SysFont("comicsans", 20)
-    if hover(75, 500, 95, 15):
-        view_board_text = fnt.render("<- View Board", 1, BLUE)
-        win.blit(view_board_text, (79, 500))
-    else:
-        view_board_text = fnt.render("<- View Board", 1, BLACK)
-        win.blit(view_board_text, (79, 500))
-
     pygame.display.flip()
+
 
 def main():
     win = pygame.display.set_mode((540, 600))
     pygame.display.set_caption("Sudoku")
-    win.fill(GREY)
     mode_selected = main_menu(win)
     run = True
     while run:
@@ -397,93 +433,93 @@ def main():
                 pygame.quit()
                 quit()
         if mode_selected == 'easy' or mode_selected == 'medium' or mode_selected == 'hard':
-            run = False
+            print(mode_selected)
+            board = Grid(9, 9, 540, 540, mode_selected, win)
+            print_board(board.board)
+            board.generate_board()
+            board.update_model()
+            key = None
+            game_run = True
+            start = time.time()
+            strikes = 0
+            while game_run:
 
-        if run == True:
-            mode_selected = main_menu(win)
+                play_time = round(time.time() - start)
 
-
-    difficulty = mode_selected
-    board = Grid(9, 9, 540, 540, difficulty)
-    board.generate_board()
-    board.update_model()
-    key = None
-    run = True
-    start = time.time()
-    strikes = 0
-    while run:
-
-        play_time = round(time.time() - start)
-
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                run = False
-            if event.type == pygame.KEYDOWN:
-                if event.key == pygame.K_SPACE:
-                    auto_solve(win, board)
-                    print("auto solving")
-                if event.key == pygame.K_1:
-                    key = 1
-                if event.key == pygame.K_2:
-                    key = 2
-                if event.key == pygame.K_3:
-                    key = 3
-                if event.key == pygame.K_4:
-                    key = 4
-                if event.key == pygame.K_5:
-                    key = 5
-                if event.key == pygame.K_6:
-                    key = 6
-                if event.key == pygame.K_7:
-                    key = 7
-                if event.key == pygame.K_8:
-                    key = 8
-                if event.key == pygame.K_9:
-                    key = 9
-                if event.key == pygame.K_DELETE:
-                    board.clear()
-                    key = None
-                if event.key == pygame.K_RETURN:
-                    i, j = board.selected
-                    if board.cubes[i][j].temp != 0:
-                        if board.place(board.cubes[i][j].temp):
-                            print("Success")
-                        else:
-                            print("Wrong")
-                            strikes += 1
-                        key = None
-
-                        if board.is_finished():
-                            postgamemenu(win, "Win", play_time, strikes)
-
-            if event.type == pygame.MOUSEBUTTONDOWN:
-                pos = pygame.mouse.get_pos()
-                clicked = board.click(pos)
-                if clicked:
-                    board.select(clicked[0], clicked[1])
-                    key = None
-
-        if board.selected and key != None:
-            board.sketch(key)
-
-        if board.is_finished():
-            post_game_run = True
-            result = "win"
-            while post_game_run:
                 for event in pygame.event.get():
+                    if event.type == pygame.QUIT:
+                        run = False
+                    if event.type == pygame.KEYDOWN:
+                        if event.key == pygame.K_SPACE:
+                            board.solve_gui()
+                        if event.key == pygame.K_1:
+                            key = 1
+                        if event.key == pygame.K_2:
+                            key = 2
+                        if event.key == pygame.K_3:
+                            key = 3
+                        if event.key == pygame.K_4:
+                            key = 4
+                        if event.key == pygame.K_5:
+                            key = 5
+                        if event.key == pygame.K_6:
+                            key = 6
+                        if event.key == pygame.K_7:
+                            key = 7
+                        if event.key == pygame.K_8:
+                            key = 8
+                        if event.key == pygame.K_9:
+                            key = 9
+                        if event.key == pygame.K_DELETE:
+                            board.clear()
+                            key = None
+                        if event.key == pygame.K_RETURN:
+                            i, j = board.selected
+                            if board.cubes[i][j].temp != 0:
+                                if board.place(board.cubes[i][j].temp):
+                                    print("Success")
+                                else:
+                                    print("Wrong")
+                                    strikes += 1
+                                key = None
+
+                                if board.is_finished():
+                                    postgamemenu(
+                                        win, "Win", play_time, strikes)
+
                     if event.type == pygame.MOUSEBUTTONDOWN:
                         pos = pygame.mouse.get_pos()
-                        if 100 < pos[0] < 250 and 380 < pos[1] < 430:
-                            post_game_menu = False
-                        if 290 < pos[0] < 440 and 380 < pos[1] < 430:
-                            pygame.quit()
-                            exit()
-                postgamemenu(win, "Win", 160, 2)
+                        clicked = board.click(pos)
+                        if clicked:
+                            board.select(clicked[0], clicked[1])
+                            key = None
 
-        if not board.is_finished():
-            redraw_window(win, board, play_time, strikes)
-            pygame.display.update()
-            print("refresh")
+                if board.selected and key != None:
+                    board.sketch(key)
+
+                if board.is_finished():
+                    post_game_run = True
+                    result = "win"
+                    while post_game_run:
+                        for event in pygame.event.get():
+                            if event.type == pygame.MOUSEBUTTONDOWN:
+                                pos = pygame.mouse.get_pos()
+                                if 100 < pos[0] < 250 and 380 < pos[1] < 430:
+                                    post_game_run = False
+                                    game_run = False
+
+                                if 290 < pos[0] < 440 and 380 < pos[1] < 430:
+                                    pygame.quit()
+                                    exit()
+                        if post_game_run:
+                            postgamemenu(win, result, play_time, strikes)
+
+                if not board.is_finished():
+                    redraw_window(win, board, play_time, strikes)
+                    pygame.display.update()
+                    print("refresh")
+        if run == True:
+            mode_selected = main_menu(win)
 
 
 main()
