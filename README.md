@@ -4,7 +4,7 @@ The sudoku solver is a program that solves sudoku boards. The program uses a bac
 # Backtracking Algorithm
 A sudoku board starts with boxes that are either empty or prefilled with numbers. A valid numbers is classified as a number that does not break any of the three rules listed below. The backtracking algorithms will look for an empty box and use the first valid number to fill the box. Then, the same will be done for the next empty box, but there will be less options since one the numbers from 1-9 is already being used in the previous box. The backtracking algorithm will continue to fill in empty boxes with valid numbers until the rules are broken. If the rules are broken, the algorithm will go back to a previous box and try a different valid number and continues to fill in the next empty boxes. This process of filling empty boxes and visiting previous boxes continues until the board is solved.  
 
-![](Sudoku.gif)
+![](backtracking-visualization.gif)
 
 # Rules of Sudoku
 The sudoku board consists of 9 columns and 9 rows forming a 9x9 grid of cubes. Within the grid, there are nine 3x3 subsquares.
