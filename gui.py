@@ -420,7 +420,6 @@ def postgamemenu(win, outcome, play_time, strikes):
     win.blit(quit_text, text_rect)
     pygame.display.flip()
 
-
 def main():
     win = pygame.display.set_mode((540, 600))
     pygame.display.set_caption("Sudoku")
