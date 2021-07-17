@@ -13,3 +13,7 @@ The sudoku board consists of 9 columns and 9 rows forming a 9x9 grid of cubes. W
 3) Each number from 1-9 can only be used once in each 3x3 subsquare
 
 The player must strategically place numbers into each box on the board while meeting these constraints. The board is complete when the player sucuessfully fills out each empty box and fulfills the three conditions. The game keeps track of the number of mistakes the player makes. Upon making three mistakes, the user will lose. 
+
+# Dependencies
+* Pygame
+  * `pip install pygame`
